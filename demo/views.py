@@ -27,7 +27,7 @@ class Eventhandle(APIView):
     def get(self,request,category=None):
         if category is not None:
             try:
-                partevent=Events.objects.filter(Q(type=category)|Q(Place=category))
+                partevent=Events.objects.filter(Q(category=category)|Q(Place=category))
                 serializer=Eventserializer(partevent,many=True)
                 return Response(serializer.data,status=status.HTTP_302_FOUND)
             except:
@@ -67,10 +67,36 @@ class Editevent(APIView):
                 serializer=Eventserializer(event,many=True)
                 return Response({'msg':'pls check id carefully','select id from ':serializer.data},status=status.HTTP_302_FOUND)
 
-    
+    def patch(self,request,id=None):
+        if id is not None:
+            try:
+                editableevent=Events.objects.get(id=id)
+                serializer=Eventserializer(editableevent,data=request.data,partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({'msg':'Event has been updated'},status=status.HTTP_202_ACCEPTED)
+                return Response({'msg':serializer.errors},status=status.HTTP_403_FORBIDDEN)
+            except:
+                event=Events.objects.all()
+                serializer=Eventserializer(event,many=True)
+                return Response({'msg':'pls check id carefully','select id from ':serializer.data},status=status.HTTP_302_FOUND)
         
 class Deleteevent(APIView):
- def delete(self,request,id):
+    def get(self,request,id=None):
+        if id is not None:
+            try:
+                editableevent=Events.objects.get(id=id)
+                serializer=Eventserializer(editableevent)
+                return Response({'msg':serializer.data},status=status.HTTP_202_ACCEPTED)
+            except:
+                event=Events.objects.all()
+                serializer=Eventserializer(event,many=True)
+                return Response({'msg':'pls check id carefully','select id from ':serializer.data},status=status.HTTP_302_FOUND)
+        event=Events.objects.all()
+        serializer=Eventserializer(event,many=True)
+        return Response({'msg':'To search event by category enter category or place name in url!!!','data':serializer.data},status=status.HTTP_302_FOUND)
+        
+    def delete(self,request,id):
         try:
             delevent=Events.objects.filter(id=id)
             delevent.delete()
@@ -79,4 +105,5 @@ class Deleteevent(APIView):
             event=Events.objects.all()
             serializer=Eventserializer(event,many=True)
             return Response({'msg':'pls check id carefully','select id from ':serializer.data},status=status.HTTP_302_FOUND)
+        
         
